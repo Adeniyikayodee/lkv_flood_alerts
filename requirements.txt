@@ -1,0 +1,51 @@
+# ── Web framework ───────────────────────────────────────────────────────
+Flask==2.3.3
+Flask-CORS==4.0.0
+gunicorn==21.2.0
+python-dotenv==1.0.0
+click==8.1.7
+itsdangerous==2.1.2
+Jinja2==3.1.2
+MarkupSafe==2.1.3
+Werkzeug==2.3.7
+colorlog==6.7.0
+
+# ── Core data stack ─────────────────────────────────────────────────────
+pandas>=2.2
+numpy<2
+geopy>=2.4
+tqdm>=4.66
+python-dateutil>=2.9
+
+# ── Earth-Engine & mapping ──────────────────────────────────────────────
+earthengine-api==0.1.386
+# geemap==0.31.0          # latest release, Python 3.11 compatible
+google-auth==2.26.1
+google-auth-oauthlib==1.2.0
+rasterio==1.3.9
+matplotlib==3.8.2
+Pillow==10.2.0
+
+# ── ML / NLP ────────────────────────────────────────────────────────────
+torch==2.1.2  # Apple-silicon wheel from https://download.pytorch.org/whl/metal
+transformers==4.41.0
+sentencepiece>=0.2
+huggingface-hub>=0.23
+llama-cpp-python==0.2.77   # compile with Metal; see env var below
+
+# ── Build helpers for llama-cpp ─────────────────────────────────────────
+cmake>=3.29
+ninja>=1.11
+wheel>=0.43
+
+# ── Optional dependencies ──────────────────────────────────────────────
+twilio>=9.0
+python-dotenv>=1.0
+
+# Text-to-Speechear
+pyttsx3==2.90
+gTTS==2.5.0
+pygame==2.5.2
+
+# Communication
+requests==2.31.0

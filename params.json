@@ -1,0 +1,13 @@
+{
+    "country": "Kenya",
+    "county": "Kisumu",
+    "subcounty": "Nyando",
+    "community": "Obunga",
+    "start_date": "2023-08-01",
+    "end_date": "2023-08-30",
+    "target_lang": "auto",
+    "outdir": "./alerts",
+    "leader_phone": "+254712345678",
+    "radio_phone": "+254787654321",
+    "radio_sms": "+254700000000"
+}
