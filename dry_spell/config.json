@@ -1,0 +1,117 @@
+// config_kano.json - Example for Kano State
+{
+    "state": "Kano",
+    "lga": "Kano Municipal",
+    "ward": "Gandun Albasa",
+    "start_date": "2025-03-01",
+    "end_date": "2025-05-31",
+    "rain_threshold": 5.0,
+    "dry_days": 10,
+    "language": "ha",
+    "phone": "+2348012345678",
+    "email": "agric.officer@kano.gov.ng"
+  }
+  
+  // config_lagos.json - Example for Lagos State
+  {
+    "state": "Lagos",
+    "lga": "Lagos Island",
+    "ward": "Victoria Island",
+    "start_date": "2025-01-01",
+    "end_date": "2025-03-31",
+    "rain_threshold": 10.0,
+    "dry_days": 7,
+    "language": "yo",
+    "phone": "+2348087654321",
+    "email": "agriculture@lagos.gov.ng"
+  }
+  
+  // config_enugu.json - Example for Enugu State
+  {
+    "state": "Enugu",
+    "lga": "Enugu North",
+    "ward": "Asata",
+    "start_date": "2025-11-01",
+    "end_date": "2026-02-28",
+    "rain_threshold": 8.0,
+    "dry_days": 14,
+    "language": "ig",
+    "phone": "+2349012345678",
+    "email": "agric@enugu.gov.ng"
+  }
+  
+  // config_borno.json - Example for Borno State (arid region)
+  {
+    "state": "Borno",
+    "lga": "Maiduguri",
+    "ward": "Bolori",
+    "start_date": "2025-10-01",
+    "end_date": "2026-03-31",
+    "rain_threshold": 2.0,
+    "dry_days": 20,
+    "language": "ha",
+    "phone": "+2347012345678",
+    "email": "drought.response@borno.gov.ng"
+  }
+  
+  // lga_database.json - Expanded LGA coordinates
+  {
+    "states": {
+      "Kano": {
+        "zone": "North-West",
+        "lgas": {
+          "Kano Municipal": {"lat": 12.0022, "lon": 8.5919},
+          "Dala": {"lat": 11.9847, "lon": 8.5010},
+          "Fagge": {"lat": 11.9687, "lon": 8.5347},
+          "Gwale": {"lat": 11.9889, "lon": 8.5103},
+          "Kumbotso": {"lat": 11.8911, "lon": 8.5030},
+          "Nassarawa": {"lat": 12.0483, "lon": 8.5237},
+          "Tarauni": {"lat": 11.9775, "lon": 8.5569},
+          "Ungogo": {"lat": 12.0908, "lon": 8.4753}
+        }
+      },
+      "Lagos": {
+        "zone": "South-West",
+        "lgas": {
+          "Lagos Island": {"lat": 6.4549, "lon": 3.4246},
+          "Eti-Osa": {"lat": 6.4583, "lon": 3.6017},
+          "Ikeja": {"lat": 6.6018, "lon": 3.3515},
+          "Alimosho": {"lat": 6.6104, "lon": 3.2954},
+          "Surulere": {"lat": 6.4926, "lon": 3.3565},
+          "Mushin": {"lat": 6.5352, "lon": 3.3490},
+          "Oshodi-Isolo": {"lat": 6.5355, "lon": 3.3087}
+        }
+      },
+      "Abuja": {
+        "zone": "North-Central",
+        "lgas": {
+          "AMAC": {"lat": 9.0579, "lon": 7.4951},
+          "Bwari": {"lat": 9.2805, "lon": 7.3805},
+          "Gwagwalada": {"lat": 8.9434, "lon": 7.0808},
+          "Kuje": {"lat": 8.8795, "lon": 7.2275},
+          "Kwali": {"lat": 8.8839, "lon": 7.0186},
+          "Abaji": {"lat": 8.4734, "lon": 6.9447}
+        }
+      },
+      "Kaduna": {
+        "zone": "North-West",
+        "lgas": {
+          "Kaduna North": {"lat": 10.5105, "lon": 7.4165},
+          "Kaduna South": {"lat": 10.4327, "lon": 7.4385},
+          "Zaria": {"lat": 11.0853, "lon": 7.7195},
+          "Igabi": {"lat": 10.8669, "lon": 7.7711},
+          "Chikun": {"lat": 10.5143, "lon": 7.4086}
+        }
+      },
+      "Enugu": {
+        "zone": "South-East",
+        "lgas": {
+          "Enugu North": {"lat": 6.4584, "lon": 7.5464},
+          "Enugu South": {"lat": 6.4403, "lon": 7.4925},
+          "Enugu East": {"lat": 6.4688, "lon": 7.5597},
+          "Nkanu East": {"lat": 6.3193, "lon": 7.6506},
+          "Udi": {"lat": 6.3156, "lon": 7.4339}
+        }
+      }
+    }
+  }
