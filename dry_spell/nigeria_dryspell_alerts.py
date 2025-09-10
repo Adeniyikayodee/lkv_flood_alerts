@@ -80,6 +80,40 @@ ZONE_LANGUAGES = {
     }
 }
 
+# ---------------------------------------------------------------------------
+# Helper utilities for safe Earth Engine operations
+# ---------------------------------------------------------------------------
+def safe_collection_mean(image_collection: ee.ImageCollection, band_name: str, fallback_value: float = 0.0) -> ee.Image:
+    """Return mean image if collection has data; otherwise constant fallback image with band name.
+
+    Uses server-side branching to avoid empty-band images.
+    """
+    size = image_collection.size()
+    mean_image = image_collection.mean()
+    fallback = ee.Image.constant(fallback_value).rename(band_name)
+    # Ensure the mean image has the expected band name if present
+    mean_image = ee.Image(mean_image).rename(band_name)
+    return ee.Image(ee.Algorithms.If(size.gt(0), mean_image, fallback))
+
+
+def safe_collection_sum(image_collection: ee.ImageCollection, band_name: str, fallback_value: float = 0.0) -> ee.Image:
+    """Return sum image if collection has data; otherwise constant fallback image with band name."""
+    size = image_collection.size()
+    sum_image = image_collection.sum()
+    fallback = ee.Image.constant(fallback_value).rename(band_name)
+    # Ensure the sum image has the expected band name if present
+    sum_image = ee.Image(sum_image).rename(band_name)
+    return ee.Image(ee.Algorithms.If(size.gt(0), sum_image, fallback))
+
+
+def safe_divide(numerator: ee.Image, denominator: ee.Image, eps: float = 1e-6) -> ee.Image:
+    """Safe element-wise division: denominator clipped to minimum epsilon to avoid divide-by-zero.
+
+    Assumes single-band images with consistent band naming.
+    """
+    denom_safe = denominator.max(eps)
+    return numerator.divide(denom_safe)
+
 # Nigerian States to Geopolitical Zones
 STATE_TO_ZONE = {
     # North-West
@@ -260,24 +294,25 @@ def calculate_dry_spell_indicators(aoi: ee.Geometry, start_date: str,
     
     dry_days = chirps.map(mark_dry_day)
     
-    # Count consecutive dry days
-    # Simplified approach: count total dry days in period
-    total_dry = dry_days.sum().clip(aoi)
+    # Count consecutive dry days (simplified total); safe against empty collections
+    total_dry = safe_collection_sum(dry_days, 'dry_day').clip(aoi)
     
     # Historical baseline (5-year average)
     hist_start = ee.Date(start_date).advance(-5, 'year')
     hist_end = ee.Date(start_date).advance(-1, 'year')
     
-    historical = ee.ImageCollection(CHIRPS_COLLECTION) \
-                   .filterBounds(aoi) \
-                   .filterDate(hist_start, hist_end) \
-                   .mean()
+    historical = safe_collection_sum(
+        ee.ImageCollection(CHIRPS_COLLECTION)
+          .filterBounds(aoi)
+          .filterDate(hist_start, hist_end),
+        band_name='precipitation',
+        fallback_value=0.0
+    )
     
-    current_total = chirps.sum()
+    current_total = safe_collection_sum(chirps, 'precipitation', 0.0)
     
     # Rainfall deficit
-    deficit = historical.subtract(current_total) \
-                       .divide(historical) \
+    deficit = safe_divide(historical.subtract(current_total), historical) \
                        .multiply(100) \
                        .rename('rainfall_deficit')
     
@@ -288,15 +323,17 @@ def calculate_dry_spell_indicators(aoi: ee.Geometry, start_date: str,
              .select('NDVI')
     
     # NDVI anomaly
-    ndvi_mean = ndvi.mean()
-    ndvi_historical = ee.ImageCollection(MODIS_NDVI_COLLECTION) \
-                        .filterBounds(aoi) \
-                        .filterDate(hist_start, hist_end) \
-                        .select('NDVI') \
-                        .mean()
+    ndvi_mean = safe_collection_mean(ndvi, 'NDVI', 0.0)
+    ndvi_historical = safe_collection_mean(
+        ee.ImageCollection(MODIS_NDVI_COLLECTION)
+          .filterBounds(aoi)
+          .filterDate(hist_start, hist_end)
+          .select('NDVI'),
+        band_name='NDVI',
+        fallback_value=0.0
+    )
     
-    ndvi_anomaly = ndvi_mean.subtract(ndvi_historical) \
-                            .divide(ndvi_historical) \
+    ndvi_anomaly = safe_divide(ndvi_mean.subtract(ndvi_historical), ndvi_historical) \
                             .multiply(100) \
                             .rename('ndvi_anomaly')
     
@@ -307,15 +344,18 @@ def calculate_dry_spell_indicators(aoi: ee.Geometry, start_date: str,
             .select('LST_Day_1km')
     
     # Convert from Kelvin to Celsius and calculate anomaly
-    lst_celsius = lst.mean().multiply(0.02).subtract(273.15)
+    lst_celsius = safe_collection_mean(lst, 'LST_Day_1km', 273.15/0.02).multiply(0.02).subtract(273.15)
     
     # 4. Soil Moisture (if available)
     try:
-        soil_moisture = ee.ImageCollection(SMAP_COLLECTION) \
-                          .filterBounds(aoi) \
-                          .filterDate(start_date, end_date) \
-                          .select('soil_moisture_pm') \
-                          .mean()
+        soil_moisture = safe_collection_mean(
+            ee.ImageCollection(SMAP_COLLECTION)
+              .filterBounds(aoi)
+              .filterDate(start_date, end_date)
+              .select('soil_moisture_pm'),
+            band_name='soil_moisture_pm',
+            fallback_value=0.0
+        )
     except:
         # Fallback: estimate from rainfall
         soil_moisture = current_total.multiply(0.1).rename('soil_moisture_pm')
@@ -349,18 +389,23 @@ def assess_drought_risk(indicators: Dict, aoi: ee.Geometry) -> ee.Image:
         'soil': 0.20
     }
     
-    # Normalize and threshold each indicator
+    # Normalize and threshold each indicator. Guard against bandless images by renaming bands.
+    rain = ee.Image(indicators['rainfall_deficit']).rename('rainfall_deficit')
+    ndvi = ee.Image(indicators['ndvi_anomaly']).rename('ndvi_anomaly')
+    temp = ee.Image(indicators['temperature']).rename('temperature')
+    soil = ee.Image(indicators['soil_moisture']).rename('soil_moisture')
+
     # High risk if rainfall deficit > 30%
-    rain_risk = indicators['rainfall_deficit'].gt(30).multiply(weights['rainfall'])
-    
+    rain_risk = rain.gt(30).multiply(weights['rainfall'])
+
     # High risk if NDVI drops > 20%
-    veg_risk = indicators['ndvi_anomaly'].lt(-20).multiply(weights['vegetation'])
-    
+    veg_risk = ndvi.lt(-20).multiply(weights['vegetation'])
+
     # High risk if temperature > 35°C
-    temp_risk = indicators['temperature'].gt(35).multiply(weights['temperature'])
-    
+    temp_risk = temp.gt(35).multiply(weights['temperature'])
+
     # High risk if soil moisture < 0.2
-    soil_risk = indicators['soil_moisture'].lt(0.2).multiply(weights['soil'])
+    soil_risk = soil.lt(0.2).multiply(weights['soil'])
     
     # Combine risks
     total_risk = rain_risk.add(veg_risk).add(temp_risk).add(soil_risk)
@@ -610,7 +655,13 @@ def main():
             maxPixels=1e9
         )
         
-        risk_level = stats.get('drought_risk', 0).getInfo()
+        # Guard: if region reduction returns None, default to 0
+        risk_value = ee.Algorithms.If(stats.contains('drought_risk'), stats.get('drought_risk'), 0)
+        risk_level = ee.Number(risk_value).format().getInfo()
+        try:
+            risk_level = int(risk_level)
+        except Exception:
+            risk_level = 0
         
         # Get rainfall deficit for message
         deficit_stats = indicators['rainfall_deficit'].reduceRegion(
@@ -620,7 +671,7 @@ def main():
             maxPixels=1e9
         )
         
-        deficit_value = deficit_stats.get('rainfall_deficit', 0).getInfo()
+        deficit_value = ee.Number(ee.Algorithms.If(deficit_stats.contains('rainfall_deficit'), deficit_stats.get('rainfall_deficit'), 0)).getInfo()
         
         # Generate alert if risk detected
         if risk_level > 0:

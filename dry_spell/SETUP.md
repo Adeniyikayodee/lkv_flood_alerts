@@ -24,7 +24,7 @@ A lightweight system for predicting and alerting communities about dry spells/dr
 
 **Software:**
 - Raspberry Pi OS (64-bit recommended) or Ubuntu Server
-- Python 3.9+
+- Python 3.11 recommended (works best with dependency wheels)
 
 ### 2. Installation
 
@@ -34,7 +34,7 @@ sudo apt-get update
 sudo apt-get upgrade -y
 
 # Install system dependencies
-sudo apt-get install -y python3-pip python3-venv git
+sudo apt-get install -y python3.11 python3.11-venv python3-pip git
 sudo apt-get install -y libgdal-dev libspatialindex-dev
 sudo apt-get install -y libatlas-base-dev libopenblas-dev
 
@@ -42,21 +42,21 @@ sudo apt-get install -y libatlas-base-dev libopenblas-dev
 mkdir ~/dryspell_alerts
 cd ~/dryspell_alerts
 
-# Create virtual environment
-python3 -m venv .venv
-source .venv/bin/activate
+# Create Python 3.11 virtual environment (recommended)
+python3.11 -m venv .venv311
+source .venv311/bin/activate
 
 # Install minimal dependencies
-pip install --upgrade pip wheel
+pip install --upgrade "pip<25" wheel setuptools
 
 # Core requirements (lightweight)
-pip install earthengine-api==0.1.386
-pip install pandas numpy matplotlib
-pip install geopy tqdm python-dateutil
-pip install gTTS pygame requests
+pip install -r requirements_minimal.txt
 
-# Optional: For maps (adds ~200MB)
-pip install geemap rasterio Pillow
+# Required for map export and imagery handling
+pip install geemap
+
+# Optional extras (add if you need local map processing)
+pip install rasterio Pillow
 ```
 
 ### 3. Google Earth Engine Setup
@@ -73,7 +73,7 @@ earthengine set_project YOUR_PROJECT_ID
 
 ### 4. Create Configuration
 
-Create `config.json`:
+Create `config.json` (must be a single valid JSON object):
 
 ```json
 {
@@ -91,7 +91,7 @@ Create `config.json`:
 
 ```bash
 # Activate environment
-source .venv/bin/activate
+source .venv311/bin/activate
 
 # Run with config file
 python nigeria_dryspell_alerts.py --config config.json
@@ -215,9 +215,13 @@ sudo dphys-swapfile swapon
 
 ### "No module named 'ee'"
 ```bash
-source .venv/bin/activate
+source .venv311/bin/activate
 pip install earthengine-api
 ```
+
+### NumPy/Pandas binary mismatch on macOS/ARM
+- Use Python 3.11 (recommended) and a fresh venv: `python3.11 -m venv .venv311 && source .venv311/bin/activate`
+- Ensure compatible versions are installed via the provided `requirements_minimal.txt` and then `pip install geemap`.
 
 ## API Limits
 

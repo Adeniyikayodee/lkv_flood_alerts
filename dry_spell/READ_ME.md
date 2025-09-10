@@ -43,8 +43,11 @@ Based on geopolitical zones:
 
 ### Raspberry Pi 4 (2GB RAM)
 ```bash
-# Minimal install (~500MB)
+# Minimal install (~500MB) with Python 3.11 venv
+python3.11 -m venv .venv311
+source .venv311/bin/activate
 pip install -r requirements_minimal.txt
+pip install geemap
 
 # Run with reduced memory footprint
 python nigeria_dryspell_alerts.py \
